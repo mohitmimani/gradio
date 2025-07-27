@@ -1,0 +1,8 @@
+{
+  "yaml.schemas": {
+    "/home/codespace/.vscode-remote/extensions/continue.continue-1.0.19-linux-x64/config-yaml-schema.json": [
+      ".continue/**/*.yaml"
+    ],
+    "https://www.artillery.io/schema.json": []
+  }
+}
