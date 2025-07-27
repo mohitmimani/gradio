@@ -63,7 +63,7 @@ const Navbar = async () => {
                     {session.user?.name
                       ? session.user.name
                           .split(" ")
-                          .map((n) => n[0])
+                          .map((n: unknown[]) => n[0])
                           .join("")
                       : "JD"}
                   </AvatarFallback>
