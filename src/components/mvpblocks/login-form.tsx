@@ -1,6 +1,7 @@
 "use client";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+
 import { AppLogo } from "../app-logo";
 
 export default function LoginForm() {
@@ -25,7 +26,7 @@ export default function LoginForm() {
       } else {
         setError("Failed to send magic link. Please try again.");
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     }
     setLoading(false);
@@ -37,7 +38,7 @@ export default function LoginForm() {
     setError(null);
     try {
       await signIn("google", { callbackUrl: "/" });
-    } catch (err) {
+    } catch {
       setError("Google sign in failed.");
       setLoading(false);
     }
@@ -98,7 +99,7 @@ export default function LoginForm() {
                   Check your email!
                 </h3>
                 <p className="text-muted-foreground">
-                  We've sent a magic link to{" "}
+                  We&apos;ve sent a magic link to{" "}
                   <span className="text-foreground font-medium">{email}</span>
                 </p>
                 <p className="text-muted-foreground text-sm">
@@ -130,7 +131,8 @@ export default function LoginForm() {
                 </button>
 
                 <p className="text-muted-foreground text-xs">
-                  Didn't receive the email? Check your spam folder or try again.
+                  Didn&apos;t receive the email? Check your spam folder or try
+                  again.
                 </p>
               </div>
             </div>
