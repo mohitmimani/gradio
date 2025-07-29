@@ -2,24 +2,18 @@
 
 import Image from "next/image";
 import { Session } from "next-auth";
-import { signIn, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
+
+import SigninModal from "./mvpblocks/signin-modal";
 
 type AuthControlsProps = {
   session: Session | null;
 };
 
 export const AuthControls = ({ session }: AuthControlsProps) => {
-  if (!session)
-    return (
-      <Button
-        className="cursor-pointer"
-        onClick={async () => await signIn("github")}
-      >
-        Sign in
-      </Button>
-    );
+  if (!session) return <SigninModal />;
 
   const { user } = session;
 
