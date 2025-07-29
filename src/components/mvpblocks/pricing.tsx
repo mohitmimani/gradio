@@ -1,25 +1,24 @@
 "use client";
 
 import NumberFlow from "@number-flow/react";
-import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
-import { Check, Star } from "lucide-react";
-import Link from "next/link";
-import { useRef, useState } from "react";
-import { useMediaQuery } from "react-responsive";
+import { BadgeCheck } from "lucide-react";
+import { useState } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Define your plans
-const plans = [
+const PAYMENT_FREQUENCIES: ("monthly" | "yearly")[] = ["monthly", "yearly"];
+const TIERS = [
   {
-    name: "FREE",
-    price: "0",
-    yearlyPrice: "0",
-    period: "per month",
+    id: "free",
+    name: "Free",
+    price: {
+      monthly: "Free",
+      yearly: "Free",
+    },
+    description: "For teachers and students getting started",
     features: [
       "Unlimited assignments",
       "AI-powered feedback",
@@ -27,17 +26,33 @@ const plans = [
       "Basic analytics",
       "Community support",
     ],
-    description:
-      "Perfect for teachers and students getting started with AI assignments.",
-    buttonText: "Start For Free",
-    href: "/sign-up",
-    isPopular: false,
+    cta: "Start For Free",
   },
   {
-    name: "PROFESSIONAL",
-    price: "49",
-    yearlyPrice: "39",
-    period: "per month",
+    id: "starter",
+    name: "Starter",
+    price: {
+      monthly: 19,
+      yearly: 15,
+    },
+    description: "For individuals and small classrooms",
+    features: [
+      "Unlimited assignments",
+      "AI-powered feedback",
+      "Up to 500 student submissions/month",
+      "Basic analytics",
+      "Email support",
+    ],
+    cta: "Start Free Trial",
+  },
+  {
+    id: "pro",
+    name: "Professional",
+    price: {
+      monthly: 49,
+      yearly: 39,
+    },
+    description: "Ideal for growing schools and organizations",
     features: [
       "Unlimited assignments",
       "Unlimited student submissions",
@@ -46,205 +61,219 @@ const plans = [
       "Team collaboration",
       "Custom integrations",
     ],
-    description: "Ideal for growing schools and organizations.",
-    buttonText: "Get Started",
-    href: "/sign-up",
-    isPopular: true,
+    cta: "Get Started",
+    popular: true,
   },
   {
-    name: "STARTER",
-    price: "19",
-    yearlyPrice: "15",
-    period: "per month",
+    id: "enterprise",
+    name: "Enterprise",
+    price: {
+      monthly: "Custom",
+      yearly: "Custom",
+    },
+    description: "For large institutions and custom needs",
     features: [
-      "Unlimited assignments",
-      "AI-powered feedback",
-      "Up to 500 student submissions/month",
-      "Basic analytics",
-      "Email support",
+      "Everything in Professional",
+      "Dedicated account manager",
+      "Custom integrations",
+      "SLA & compliance",
+      "Onboarding & training",
     ],
-    description: "For individuals and small classrooms.",
-    buttonText: "Start Free Trial",
-    href: "/sign-up",
-    isPopular: false,
+    cta: "Contact Us",
+    highlighted: true,
   },
 ];
 
-export default function Pricing() {
-  const [isMonthly, setIsMonthly] = useState(true);
-  const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
-  const switchRef = useRef<HTMLButtonElement>(null);
+const HighlightedBackground = () => (
+  <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] bg-[size:45px_45px] opacity-100 dark:opacity-30" />
+);
 
-  const handleToggle = (checked: boolean) => {
-    setIsMonthly(!checked);
-    if (checked && switchRef.current) {
-      const rect = switchRef.current.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
+const PopularBackground = () => (
+  <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(240,119,119,0.1),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(220,119,118,0.3),rgba(255,255,255,0))]" />
+);
 
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: {
-          x: x / window.innerWidth,
-          y: y / window.innerHeight,
-        },
-        colors: [
-          "hsl(var(--primary))",
-          "hsl(var(--accent))",
-          "hsl(var(--secondary))",
-          "hsl(var(--muted))",
-        ],
-        ticks: 200,
-        gravity: 1.2,
-        decay: 0.94,
-        startVelocity: 30,
-        shapes: ["circle"],
-      });
-    }
-  };
+const Tab = ({
+  text,
+  selected,
+  setSelected,
+  discount = false,
+}: {
+  text: string;
+  selected: boolean;
+  setSelected: (text: string) => void;
+  discount?: boolean;
+}) => {
+  return (
+    <button
+      onClick={() => setSelected(text)}
+      className={cn(
+        "text-foreground relative w-fit px-4 py-2 text-sm font-semibold capitalize transition-colors",
+        discount && "flex items-center justify-center gap-2.5",
+      )}
+    >
+      <span className="relative z-10">{text}</span>
+      {selected && (
+        <motion.span
+          layoutId="tab"
+          transition={{ type: "spring", duration: 0.4 }}
+          className="bg-background absolute inset-0 z-0 rounded-full shadow-sm"
+        ></motion.span>
+      )}
+      {discount && (
+        <Badge
+          className={cn(
+            "relative z-10 bg-gray-100 text-xs whitespace-nowrap text-black shadow-none hover:bg-gray-100",
+            selected
+              ? "bg-[#F3F4F6] hover:bg-[#F3F4F6]"
+              : "bg-gray-300 hover:bg-gray-300",
+          )}
+        >
+          Save 35%
+        </Badge>
+      )}
+    </button>
+  );
+};
+
+const PricingCard = ({
+  tier,
+  paymentFrequency,
+  className = "",
+}: {
+  tier: (typeof TIERS)[0];
+  paymentFrequency: keyof typeof tier.price;
+  className?: string;
+}) => {
+  const price = tier.price[paymentFrequency];
+  const isHighlighted = tier.highlighted;
+  const isPopular = tier.popular;
 
   return (
-    <div className="container py-20">
-      <div className="mb-12 space-y-4 text-center">
-        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          Simple, transparent pricing for all.
-        </h2>
-        <p className="text-muted-foreground text-lg whitespace-pre-line">
-          Choose the plan that works for you {"\n"}
-          All plans include access to our platform, lead generation tools, and
-          dedicated support.
-        </p>
+    <div
+      className={cn(
+        "relative flex flex-col gap-8 overflow-hidden rounded-2xl border p-6 shadow",
+        isHighlighted
+          ? "bg-foreground text-background"
+          : "bg-background text-foreground",
+        isPopular && "outline outline-[#eb638a]",
+        className,
+      )}
+    >
+      {isHighlighted && <HighlightedBackground />}
+      {isPopular && <PopularBackground />}
+
+      <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
+        {tier.name}
+        {isPopular && (
+          <Badge className="mt-1 bg-orange-900 px-1 py-0 text-white hover:bg-orange-900">
+            🔥 Most Popular
+          </Badge>
+        )}
+      </h2>
+
+      <div className="relative h-12">
+        {typeof price === "number" ? (
+          <>
+            <NumberFlow
+              format={{
+                style: "currency",
+                currency: "USD",
+                trailingZeroDisplay: "stripIfInteger",
+              }}
+              value={price}
+              className="text-4xl font-medium"
+            />
+            <p className="-mt-2 text-xs font-medium">Per month/user</p>
+          </>
+        ) : (
+          <h1 className="text-4xl font-medium">{price}</h1>
+        )}
       </div>
 
-      <div className="mb-10 flex justify-center">
-        <div className="relative inline-flex cursor-pointer items-center">
-          <Label htmlFor="annual-billing-switch">Annual billing</Label>
-          <Switch
-            id="annual-billing-switch"
-            ref={switchRef}
-            checked={!isMonthly}
-            onCheckedChange={handleToggle}
-            className="relative ml-2"
-          />
-        </div>
-        <span className="ml-2 font-semibold">
-          Annual billing <span className="text-primary">(Save 20%)</span>
-        </span>
+      <div className="flex-1 space-y-2">
+        <h3 className="text-sm font-medium">{tier.description}</h3>
+        <ul className="space-y-2">
+          {tier.features.map((feature, index) => (
+            <li
+              key={index}
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium",
+                isHighlighted ? "text-background" : "text-foreground/60",
+              )}
+            >
+              <BadgeCheck strokeWidth={1} size={16} />
+              {feature}
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <div className="sm:2 grid grid-cols-1 gap-4 md:grid-cols-3">
-        {plans.map((plan, index) => (
-          <motion.div
-            key={index}
-            initial={{ y: 50, opacity: 1 }}
-            whileInView={
-              isDesktop
-                ? {
-                    y: plan.isPopular ? -20 : 0,
-                    opacity: 1,
-                    x: index === 2 ? -30 : index === 0 ? 30 : 0,
-                    scale: index === 0 || index === 2 ? 0.94 : 1.0,
-                  }
-                : {}
-            }
-            viewport={{ once: true }}
-            transition={{
-              duration: 1.6,
-              type: "spring",
-              stiffness: 100,
-              damping: 30,
-              delay: 0.4,
-              opacity: { duration: 0.5 },
-            }}
-            className={cn(
-              `bg-background relative rounded-2xl border-[1px] p-6 text-center lg:flex lg:flex-col lg:justify-center`,
-              plan.isPopular ? "border-primary border-2" : "border-border",
-              "flex flex-col",
-              !plan.isPopular && "mt-5",
-              index === 0 || index === 2
-                ? "z-0 translate-x-0 translate-y-0 -translate-z-[50px] rotate-y-[10deg] transform"
-                : "z-10",
-              index === 0 && "origin-right",
-              index === 2 && "origin-left",
-            )}
-          >
-            {plan.isPopular && (
-              <div className="bg-primary absolute top-0 right-0 flex items-center rounded-tr-xl rounded-bl-xl px-2 py-0.5">
-                <Star className="text-primary-foreground h-4 w-4 fill-current" />
-                <span className="text-primary-foreground ml-1 font-sans font-semibold">
-                  Popular
-                </span>
-              </div>
-            )}
-            <div className="flex flex-1 flex-col">
-              <p className="text-muted-foreground text-base font-semibold">
-                {plan.name}
-              </p>
-              <div className="mt-6 flex items-center justify-center gap-x-2">
-                <span className="text-foreground text-5xl font-bold tracking-tight">
-                  <NumberFlow
-                    value={
-                      isMonthly ? Number(plan.price) : Number(plan.yearlyPrice)
-                    }
-                    format={{
-                      style: "currency",
-                      currency: "USD",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }}
-                    transformTiming={{
-                      duration: 500,
-                      easing: "ease-out",
-                    }}
-                    willChange
-                    className="font-variant-numeric: tabular-nums"
-                  />
-                </span>
-                {plan.period !== "Next 3 months" && (
-                  <span className="text-muted-foreground text-sm leading-6 font-semibold tracking-wide">
-                    / {plan.period}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-muted-foreground text-xs leading-5">
-                {isMonthly ? "billed monthly" : "billed annually"}
-              </p>
-
-              <ul className="mt-5 flex flex-col gap-2">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <Check className="text-primary mt-1 h-4 w-4 flex-shrink-0" />
-                    <span className="text-left">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <hr className="my-4 w-full" />
-
-              <Link
-                href={plan.href}
-                className={cn(
-                  buttonVariants({
-                    variant: "outline",
-                  }),
-                  "group relative w-full gap-2 overflow-hidden text-lg font-semibold tracking-tighter",
-                  "hover:bg-primary hover:text-primary-foreground hover:ring-primary transform-gpu ring-offset-current transition-all duration-300 ease-out hover:ring-2 hover:ring-offset-1",
-                  plan.isPopular
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background text-foreground",
-                )}
-              >
-                {plan.buttonText}
-              </Link>
-              <p className="text-muted-foreground mt-6 text-xs leading-5">
-                {plan.description}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <Button
+        className={cn(
+          "h-fit w-full rounded-lg",
+          isHighlighted && "bg-accent text-foreground hover:bg-accent/95",
+        )}
+      >
+        {tier.cta}
+      </Button>
     </div>
+  );
+};
+
+export default function Pricing() {
+  const [selectedPaymentFreq, setSelectedPaymentFreq] = useState<
+    "monthly" | "yearly"
+  >(PAYMENT_FREQUENCIES[0]);
+
+  return (
+    <section
+      className="flex flex-col items-center gap-10 px-5 py-10"
+      id="pricing"
+    >
+      <div className="space-y-7 text-center">
+        <div className="space-y-4">
+          <h1 className="text-4xl font-medium md:text-5xl">
+            Simple, transparent pricing for all.
+          </h1>
+          <p>
+            Choose the plan that works for you.
+            <br />
+            All plans include access to our platform, AI feedback, and support.
+          </p>
+        </div>
+        <div className="mx-auto flex w-fit rounded-full bg-[#F3F4F6] p-1 dark:bg-[#222]">
+          {PAYMENT_FREQUENCIES.map((freq) => (
+            <Tab
+              key={freq}
+              text={freq}
+              selected={selectedPaymentFreq === freq}
+              setSelected={(text) =>
+                setSelectedPaymentFreq(text as "monthly" | "yearly")
+              }
+              discount={freq === "yearly"}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="grid w-full max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {TIERS.map((tier, i) =>
+          tier.id === "enterprise" ? (
+            <PricingCard
+              key={i}
+              tier={tier}
+              paymentFrequency={selectedPaymentFreq}
+              className="col-span-1 lg:col-span-3"
+            />
+          ) : (
+            <PricingCard
+              key={i}
+              tier={tier}
+              paymentFrequency={selectedPaymentFreq}
+            />
+          ),
+        )}
+      </div>
+    </section>
   );
 }

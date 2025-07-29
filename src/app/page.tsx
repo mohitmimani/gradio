@@ -1,6 +1,7 @@
 import ContactUs from "@/components/mvpblocks/contact-us";
 import Faq from "@/components/mvpblocks/faq";
 import Feature from "@/components/mvpblocks/feature";
+import Footer from "@/components/mvpblocks/footer";
 import GradioHero from "@/components/mvpblocks/gradient-hero";
 import Pricing from "@/components/mvpblocks/pricing";
 import Testimonials from "@/components/mvpblocks/testimonials";
@@ -25,6 +26,8 @@ const HomePage = async () => {
       <Separator />
       <Faq />
       <ContactUs />
+      <Separator className="bottom-0" />
+      <Footer />
     </>
   );
 };
