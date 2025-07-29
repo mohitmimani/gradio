@@ -19,13 +19,15 @@ export const AuthControls = ({ session }: AuthControlsProps) => {
 
   return (
     <>
-      <Image
-        className="overflow-hidden rounded-full"
-        src={`${user?.image}`}
-        alt={`${user?.name}`}
-        width={32}
-        height={32}
-      />
+      {user?.image && (
+        <Image
+          className="overflow-hidden rounded-full"
+          src={user.image}
+          alt={user?.name || "User"}
+          width={32}
+          height={32}
+        />
+      )}
       <Button className="cursor-pointer" onClick={async () => await signOut()}>
         Sign out
       </Button>

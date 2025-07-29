@@ -97,3 +97,40 @@ export const authenticators = pgTable(
     },
   ],
 );
+
+// Teams table
+export const teams = pgTable("team", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  logo: text("logo"),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
+  createdBy: text("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+});
+
+// UserTeams join table (now also handles invitees)
+export const userTeams = pgTable(
+  "user_team",
+  {
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    teamId: text("teamId")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["educator", "student", "billing"] })
+      .notNull()
+      .default("student"),
+    isSuperAdmin: boolean("isSuperAdmin").default(false).notNull(),
+    status: text("status", { enum: ["invited", "joined"] })
+      .notNull()
+      .default("invited"),
+    invitedAt: timestamp("invitedAt", { mode: "date" }).defaultNow(),
+    joinedAt: timestamp("joinedAt", { mode: "date" }),
+    inviteeEmail: text("inviteeEmail"), // for invited users not yet registered
+  },
+  (t) => [{ compoundKey: primaryKey({ columns: [t.userId, t.teamId] }) }],
+);

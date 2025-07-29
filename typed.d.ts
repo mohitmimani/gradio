@@ -6,10 +6,14 @@ declare module "next-auth" {
       id: string;
       stripeCustomerId: string;
       isActive: boolean;
+      role: "educator" | "student";
+      isSuperAdmin: boolean;
     };
   }
   interface User extends DefaultUser {
     stripeCustomerId: string;
     isActive: boolean;
+    role: "educator" | "student";
+    isSuperAdmin: boolean;
   }
 }

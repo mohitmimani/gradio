@@ -300,7 +300,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       session.user.id = user.id;
       session.user.stripeCustomerId = user.stripeCustomerId;
       session.user.isActive = user.isActive;
-
+      session.user.role = user.role;
+      session.user.isSuperAdmin = user.isSuperAdmin;
+      console.log("Session user:", session.user);
       return session;
     },
   },
