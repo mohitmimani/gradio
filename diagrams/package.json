@@ -1,0 +1,21 @@
+{
+  "name": "gradio-diagram-generator",
+  "version": "1.0.0",
+  "description": "Generate PNG images from mermaid diagrams for Gradio Quiz Platform presentations",
+  "main": "generate-png.js",
+  "scripts": {
+    "generate": "node generate-png.js",
+    "generate-bash": "./generate-png.sh",
+    "install-cli": "npm install -g @mermaid-js/mermaid-cli",
+    "check-cli": "mmdc --version"
+  },
+  "keywords": [
+    "mermaid",
+    "diagrams",
+    "png",
+    "presentations",
+    "gradio"
+  ],
+  "author": "Gradio Team",
+  "license": "MIT"
+}

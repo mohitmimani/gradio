@@ -4,26 +4,31 @@ import { useEffect, useState } from "react";
 
 import AuthProtect from "@/components/auth-protect";
 import RoleSelectionModal from "@/components/role-selection-modal";
+import { Toaster } from "@/components/ui/toaster";
 
 function RoleGate({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  const [showModal, setShowModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (status === "loading" || !session?.user?.id) return;
-    // Check if user has any teams
     fetch("/api/user/teams")
       .then((res) => res.json())
       .then((data) => {
-        setShowModal(!data.teams || data.teams.length === 0);
+        if (data.teams && data.teams.length > 0) {
+          setShowOnboarding(false);
+        } else {
+          setShowOnboarding(true);
+        }
       });
   }, [session, status]);
 
   if (status === "loading") return null;
   return (
     <>
-      <RoleSelectionModal open={!showModal} />
+      <RoleSelectionModal open={showOnboarding} />
       {children}
+      <Toaster />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 import EmailProvider from "next-auth/providers/nodemailer";
 import nodemailer from "nodemailer";
 
@@ -270,7 +271,13 @@ function gradioEmailHtml({
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db),
+
   providers: [
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
     EmailProvider({
       server: {
         host: env.EMAIL_SERVER_HOST,
@@ -294,6 +301,31 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      // If OAuth and user exists with same email, link accounts
+      if (account?.provider !== "email" && user?.email) {
+        // Find user by email
+        const existingUserArr = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, user.email))
+          .limit(1);
+        const existingUser = existingUserArr[0];
+        if (
+          existingUser &&
+          account &&
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          !(existingUser as Record<string, any>)[`${account.provider}Id`]
+        ) {
+          // Link OAuth account to user
+          await db
+            .update(users)
+            .set({ [`${account.provider}Id`]: account.providerAccountId })
+            .where(eq(users.id, existingUser.id));
+        }
+      }
+      return true;
+    },
     async session({ session, user }) {
       if (!session.user) return session;
 

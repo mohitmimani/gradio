@@ -23,6 +23,7 @@ export const users = pgTable("user", {
   image: text("image"),
   stripeCustomerId: text("stripeCustomerId").unique(),
   isActive: boolean("isActive").default(false).notNull(),
+  googleId: text("googleId"),
 });
 
 export const accounts = pgTable(
@@ -115,9 +116,7 @@ export const teams = pgTable("team", {
 export const userTeams = pgTable(
   "user_team",
   {
-    userId: text("userId")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: text("userId").references(() => users.id, { onDelete: "cascade" }), // nullable for invitees
     teamId: text("teamId")
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
@@ -132,5 +131,76 @@ export const userTeams = pgTable(
     joinedAt: timestamp("joinedAt", { mode: "date" }),
     inviteeEmail: text("inviteeEmail"), // for invited users not yet registered
   },
-  (t) => [{ compoundKey: primaryKey({ columns: [t.userId, t.teamId] }) }],
+  (t) => [{ compoundKey: primaryKey({ columns: [t.teamId, t.inviteeEmail] }) }],
 );
+
+// MCQ Quizzes table
+export const mcqQuizzes = pgTable("mcq_quiz", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  description: text("description"),
+  subject: text("subject"),
+  difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }),
+  createdBy: text("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  teamId: text("teamId").references(() => teams.id, { onDelete: "cascade" }),
+  shareCode: text("shareCode").unique(),
+  isPublished: boolean("isPublished").default(false).notNull(),
+  aiGenerated: boolean("aiGenerated").default(false).notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow(),
+});
+
+// MCQ Questions table
+export const mcqQuestions = pgTable("mcq_question", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  quizId: text("quizId")
+    .notNull()
+    .references(() => mcqQuizzes.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  options: text("options").notNull(), // JSON array of options
+  correctAnswer: integer("correctAnswer").notNull(), // index of correct option
+  explanation: text("explanation"),
+  points: integer("points").default(1).notNull(),
+  orderIndex: integer("orderIndex").notNull(),
+});
+
+// Student Responses table
+export const studentResponses = pgTable("student_response", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  quizId: text("quizId")
+    .notNull()
+    .references(() => mcqQuizzes.id, { onDelete: "cascade" }),
+  studentId: text("studentId")
+    .references(() => users.id, { onDelete: "cascade" }),
+  studentName: text("studentName"),
+  studentEmail: text("studentEmail"),
+  responses: text("responses").notNull(), // JSON object mapping questionId to selected option
+  score: integer("score"),
+  totalScore: integer("totalScore"),
+  startedAt: timestamp("startedAt", { mode: "date" }).defaultNow(),
+  submittedAt: timestamp("submittedAt", { mode: "date" }),
+  timeSpent: integer("timeSpent"), // in seconds
+});
+
+// Quiz Shares table (for tracking who has access)
+export const quizShares = pgTable("quiz_share", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  quizId: text("quizId")
+    .notNull()
+    .references(() => mcqQuizzes.id, { onDelete: "cascade" }),
+  sharedWith: text("sharedWith"), // email or group
+  shareType: text("shareType", { enum: ["email", "link", "team"] }).notNull(),
+  expiresAt: timestamp("expiresAt", { mode: "date" }),
+  maxAttempts: integer("maxAttempts").default(1),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
+});

@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       .map(
         (inv) =>
           ({
-            userId: "", // No userId until they register
+            userId: null, // No userId until they register
             teamId: team.id,
             role: inv.role,
             isSuperAdmin: false,
