@@ -22,6 +22,8 @@ const eslintConfig = [
       "simple-import-sort/imports": "warn",
       "simple-import-sort/exports": "warn",
       "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "quotes": "off",
     },
   }),
 ];
