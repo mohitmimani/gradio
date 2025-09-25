@@ -204,3 +204,66 @@ export const quizShares = pgTable("quiz_share", {
   maxAttempts: integer("maxAttempts").default(1),
   createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
 });
+
+// Assignments table
+export const assignments = pgTable("assignment", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  description: text("description"),
+  instructions: text("instructions"),
+  dueDate: timestamp("dueDate", { mode: "date" }),
+  allowedFileTypes: text("allowedFileTypes").default("pdf,doc,docx,txt,jpg,jpeg,png"), // comma-separated
+  maxFileSize: integer("maxFileSize").default(10485760), // 10MB in bytes
+  createdBy: text("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  teamId: text("teamId").references(() => teams.id, { onDelete: "cascade" }),
+  isPublished: boolean("isPublished").default(false).notNull(),
+  shareCode: text("shareCode").unique(),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow(),
+});
+
+// Assignment Submissions table
+export const assignmentSubmissions = pgTable("assignment_submission", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  assignmentId: text("assignmentId")
+    .notNull()
+    .references(() => assignments.id, { onDelete: "cascade" }),
+  studentId: text("studentId")
+    .references(() => users.id, { onDelete: "cascade" }),
+  studentName: text("studentName"),
+  studentEmail: text("studentEmail"),
+  fileName: text("fileName").notNull(),
+  originalFileName: text("originalFileName").notNull(),
+  filePath: text("filePath").notNull(),
+  fileSize: integer("fileSize").notNull(),
+  mimeType: text("mimeType").notNull(),
+  status: text("status", { enum: ["submitted", "analyzing", "analyzed", "error"] })
+    .notNull()
+    .default("submitted"),
+  submittedAt: timestamp("submittedAt", { mode: "date" }).defaultNow(),
+  analyzedAt: timestamp("analyzedAt", { mode: "date" }),
+});
+
+// AI Analysis Results table
+export const aiAnalysisResults = pgTable("ai_analysis_result", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  submissionId: text("submissionId")
+    .notNull()
+    .references(() => assignmentSubmissions.id, { onDelete: "cascade" }),
+  analysisType: text("analysisType").notNull().default("content_detection"),
+  isAiGenerated: boolean("isAiGenerated"),
+  confidenceScore: integer("confidenceScore"), // 0-100
+  detectedPatterns: text("detectedPatterns"), // JSON array of detected patterns
+  aiDetectionReason: text("aiDetectionReason"), // AI explanation
+  handwritingConfidence: integer("handwritingConfidence"), // 0-100 for handwriting detection
+  textExtracted: text("textExtracted"), // extracted text from file
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
+});

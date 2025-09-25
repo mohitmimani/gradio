@@ -10,6 +10,9 @@ import {
   PieChart,
   Share2,
   Users,
+  Upload,
+  FileText,
+  BarChart3,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
@@ -27,6 +30,16 @@ import {
 } from "@/components/ui/sidebar";
 
 const navMain = [
+  {
+    title: "Assignments",
+    url: "/dashboard/assignments",
+    icon: Upload,
+    items: [
+      { title: "Create Assignment", url: "/dashboard/assignments/create" },
+      { title: "Assignment Library", url: "/dashboard/assignments/library" },
+      { title: "Submission Analytics", url: "/dashboard/assignments/analytics" },
+    ],
+  },
   {
     title: "AI MCQ Generator",
     url: "/dashboard/mcq-generator",
@@ -50,7 +63,8 @@ const navMain = [
 ];
 
 const projects = [
-  { name: "Quick Actions", url: "#", icon: FileQuestion },
+  { name: "Recent Assignments", url: "/dashboard/assignments/library", icon: FileText },
+  { name: "AI Detection Stats", url: "/dashboard/assignments/analytics", icon: BarChart3 },
   { name: "Recent Quizzes", url: "/dashboard/recent", icon: ChartBar },
   { name: "Student Groups", url: "/dashboard/groups", icon: Users },
 ];
