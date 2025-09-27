@@ -9,15 +9,17 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Note: We allow public submissions for assignments accessed via share links
+    console.log("Upload request - Session:", session?.user?.id || "No session");
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const assignmentId = formData.get("assignmentId") as string;
     const studentName = formData.get("studentName") as string;
     const studentEmail = formData.get("studentEmail") as string;
+
+    console.log("Upload request - Assignment ID:", assignmentId);
+    console.log("Upload request - File:", file?.name, file?.size);
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -77,11 +79,12 @@ export async function POST(req: NextRequest) {
     const relativeFilePath = `temp/${fileName}`;
 
     // Save submission to database
+    console.log("Attempting database insertion...");
     const submission = await db.insert(assignmentSubmissions).values({
       assignmentId: assignmentId,
-      studentId: session.user.id,
-      studentName: studentName || session.user.name || "Unknown",
-      studentEmail: studentEmail || session.user.email || "Unknown",
+      studentId: session?.user?.id || null, // Allow null for public submissions
+      studentName: studentName || session?.user?.name || "Anonymous Student",
+      studentEmail: studentEmail || session?.user?.email || "anonymous@example.com",
       fileName: fileName,
       originalFileName: file.name,
       filePath: relativeFilePath,
@@ -89,6 +92,8 @@ export async function POST(req: NextRequest) {
       mimeType: file.type,
       status: "submitted",
     }).returning();
+
+    console.log("Database insertion successful:", submission[0]?.id);
 
     return NextResponse.json({
       success: true,

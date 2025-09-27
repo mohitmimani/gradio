@@ -89,6 +89,13 @@ export default function AssignmentSubmissionPage() {
   const handleUploadSuccess = (submission: any) => {
     setSubmissions(prev => [...prev, submission]);
 
+    // Show detailed success confirmation
+    toast({
+      title: "🎉 File Submitted Successfully!",
+      description: `${submission.originalFileName} has been uploaded and is now being analyzed for AI-generated content. You'll see the results shortly.`,
+      duration: 6000,
+    });
+
     // Start analysis automatically
     analyzeSubmission(submission.id);
   };
@@ -379,39 +386,37 @@ export default function AssignmentSubmissionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm">
-                <strong>Debug Info:</strong> Assignment ID: {assignment.id}<br/>
-                Published: {assignment.isPublished ? "Yes" : "No"}<br/>
-                File Types: {allowedFileTypes.join(", ")}<br/>
-                Max Size: {formatFileSize(assignment.maxFileSize)}
-              </p>
-            </div>
             <FileUpload
               assignmentId={assignment.id}
               allowedFileTypes={allowedFileTypes}
               maxFileSize={assignment.maxFileSize}
               onUploadSuccess={handleUploadSuccess}
             />
+          </CardContent>
+        </Card>
+      )}
 
-            {/* Simple HTML file input as backup */}
-            <div className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg">
-              <h4 className="font-medium mb-2">Alternative Upload (if drag & drop doesn't work):</h4>
-              <input
-                type="file"
-                accept={allowedFileTypes.map(type => `.${type}`).join(",")}
-                onChange={handleSimpleFileUpload}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Max size: {formatFileSize(assignment.maxFileSize)}
-              </p>
+      {/* Success Message for Recent Submissions */}
+      {submissions.length > 0 && submissions.some(s =>
+        new Date(s.submittedAt).getTime() > Date.now() - 30000 // Show for 30 seconds
+      ) && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+              <div>
+                <h3 className="font-semibold text-green-900">Submission Confirmed!</h3>
+                <p className="text-sm text-green-700">
+                  Your file has been successfully submitted and is being processed.
+                  Check back in a few minutes to see the AI analysis results.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Show debug info if overdue */}
+      {/* Show overdue message */}
       {isOverdue && (
         <Card>
           <CardHeader>
@@ -420,12 +425,6 @@ export default function AssignmentSubmissionPage() {
               This assignment was due on {formatDate(assignment.dueDate)}. Submissions are no longer accepted.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Due date: {assignment.dueDate}<br/>
-              Current date: {new Date().toISOString()}
-            </p>
-          </CardContent>
         </Card>
       )}
 

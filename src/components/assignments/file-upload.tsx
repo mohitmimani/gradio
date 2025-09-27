@@ -112,36 +112,46 @@ export default function FileUpload({
 
       xhr.addEventListener("load", () => {
         if (xhr.status === 200) {
-          const result = JSON.parse(xhr.responseText);
-          setUploadingFiles(prev =>
-            prev.map(f =>
-              f.file.name === file.name
-                ? {
-                    ...f,
-                    progress: 100,
-                    status: "success" as const,
-                    submissionId: result.submission.id
-                  }
-                : f
-            )
-          );
+          try {
+            const result = JSON.parse(xhr.responseText);
+            setUploadingFiles(prev =>
+              prev.map(f =>
+                f.file.name === file.name
+                  ? {
+                      ...f,
+                      progress: 100,
+                      status: "success" as const,
+                      submissionId: result.submission?.id
+                    }
+                  : f
+              )
+            );
 
-          toast({
-            title: "Upload Successful",
-            description: `${file.name} has been uploaded successfully`,
-          });
-
-          if (onUploadSuccess) {
-            onUploadSuccess(result.submission);
+            // Don't show toast here since parent component will show detailed confirmation
+            if (onUploadSuccess) {
+              onUploadSuccess(result.submission);
+            }
+          } catch (parseError) {
+            console.error("Error parsing successful response:", parseError);
+            throw new Error("Failed to process upload response");
           }
         } else {
-          const errorResult = JSON.parse(xhr.responseText);
-          throw new Error(errorResult.error || "Upload failed");
+          let errorMessage = "Upload failed";
+          try {
+            const errorResult = JSON.parse(xhr.responseText);
+            errorMessage = errorResult.error || errorMessage;
+            console.error("Upload error details:", errorResult);
+          } catch (parseError) {
+            console.error("Could not parse error response:", xhr.responseText);
+            errorMessage = `Upload failed with status ${xhr.status}`;
+          }
+          throw new Error(errorMessage);
         }
       });
 
-      xhr.addEventListener("error", () => {
-        throw new Error("Upload failed");
+      xhr.addEventListener("error", (event) => {
+        console.error("Upload network error:", event);
+        throw new Error("Network error during upload. Please check your connection and try again.");
       });
 
       xhr.open("POST", "/api/assignments/upload");
